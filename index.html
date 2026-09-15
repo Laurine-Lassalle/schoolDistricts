@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>School districts from Aspen to Parachute</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      h2 {
+        margin: 10px;
+        font-size: 16px;
+        text-align: left;
+      },
+
+      p {
+         line-height: 12px;
+        font-size: 10px;
+      }
+
+      .map-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        margin-left: 20px;
+        font-family: Arial, sans-serif;
+        overflow: auto;
+        border-radius: 3px;
+        height: 100%;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      #features {
+        top: 0;
+        background: #fff;
+        height: 40px;
+        margin-top: 20px;
+        width: 500px;
+
+      }
+
+      #legend {
+        padding: 10px;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+        line-height: 18px;
+        height: auto;
+        background: rgba(255, 255, 255, 0.8);
+        margin-right: 10px;
+        margin-bottom: 80px;
+        width: 400px;
+        font-size: 13px;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+      }
+      
+
+        #legend-rects, #legend-circles {
+          display: flex;
+          flex-direction: column;
+          margin-right: 8px; /* space between columns */
+        }
+      #note{
+        padding: 5px;
+        line-height: 14px;
+        height: auto;
+        margin-left: 20px;
+        margin-bottom: 25px;
+        width: 700px;
+        font-size: 13px;
+        left: 0;
+        color: #ffff;
+        text-shadow: 1px 1px 3px #000000;
+         
+ }
+      .legend-key {
+        display: inline-block;
+        border-radius: 20%;
+        width: 10px;
+        height: 10px;
+        margin-right: 5px;
+        opacity: 0.7;
+        border: 1px solid white;
+        
+      }
+      
+     .legend-key.circle {
+      border-radius: 50%;
+    }
+    
+      .mapboxgl-popup-content {
+  font-size: 12px;
+  padding: 8px;
+  width: auto;
+  max-width: none;
+ white-space: nowrap;
+}
+      
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="map-overlay" id="features">
+      <h2><center>School districts and public schools from Aspen to Parachute</center></h2>
+    </div>
+     <div class="map-overlay" id="legend">
+    
+        <div id="legend-rects"></div>
+        <div id="legend-circles"></div>
+       </div>
+
+    <div class="map-overlay" id="note"><p>Source: CDE <br>Credit: Laurine Lassalle - Aspen Journalism</p></div>
+    
+    
+    <script>
+      // define access token
+      mapboxgl.accessToken = 'pk.eyJ1IjoibGF1cmluZS1haiIsImEiOiJja3ByZDBnYjMwNGYzMnZwbWhmMGJrcTZhIn0.xZkfTBy8vho1jNUvbxRMMg';
+
+      const isMobile = window.innerWidth < 600;
+      // create map
+      const map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/laurine-aj/cmu306x46002v01sj58zq95mc' ,
+        center: isMobile ? [-107.3, 39.35] : [-107.4, 39.4],
+        zoom: isMobile ? 7 : 8.5
+      });
+
+    map.on('load', () => {
+  map.getCanvas().style.cursor = 'default';
+
+      // Add legend
+      const layers = [
+        { name: 'Garfield 16 school district', color: '#f29e31', shape: 'rect' },
+        { name: 'Garfield RE-2 school district', color: '#1f89e5', shape: 'rect' },
+        { name: 'Roaring Fork RE-1 school district', color: '#e51010', shape: 'rect' },
+        { name: 'Aspen 1 school district', color: '#510566', shape: 'rect' },
+        
+        
+        // Circles
+          { name: 'Garfield 16 schools', color: '#004d40', shape: 'circle' },
+          { name: 'Garfield RE-2 schools', color: '#da1b61', shape: 'circle' },
+          { name: 'Roaring Fork schools', color: '#066ab7', shape: 'circle' },
+          { name: 'Aspen schools', color: '#f3cf30', shape: 'circle' }
+          ];
+  
+      
+      const legendRects = document.getElementById('legend-rects');
+      const legendCircles = document.getElementById('legend-circles');
+
+      layers.forEach(layer => {
+        const item = document.createElement('div');
+        const key = document.createElement('span');
+        key.className = 'legend-key';
+        if (layer.shape === 'circle') key.classList.add('circle');
+        key.style.backgroundColor = layer.color;
+
+        const value = document.createElement('span');
+        value.innerHTML = `${layer.name}`;
+        item.appendChild(key);
+        item.appendChild(value);
+        (layer.shape === 'circle' ? legendCircles : legendRects).appendChild(item);
+      });
+      
+      const popup = new mapboxgl.Popup({
+  closeButton: false,
+  closeOnClick: false
+});
+      
+map.on('mousemove', 'cdphe-cdoe-school-locations-and-district-office-locations-2', (e) => {
+  if (!e.features.length) return;
+
+  map.getCanvas().style.cursor = 'pointer'; // change cursor on hover
+
+  const feature = e.features[0];
+  const schoolName = feature.properties.School_Name;
+
+  popup
+    .setLngLat(e.lngLat)
+    .setHTML(`<strong>${schoolName}</strong>`)
+    .addTo(map);
+});
+      
+      map.on('mouseleave', 'cdphe-cdoe-school-locations-and-district-office-locations-2', () => {
+  map.getCanvas().style.cursor = '';
+  popup.remove();
+});
+      
+            });
+    </script>
+   
+  </body>
+</html>
