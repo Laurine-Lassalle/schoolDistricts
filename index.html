@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>School districts from Aspen to Parachute</title>
+    <title>Out-of-district student share by school district, Aspen to Parachute</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
     <link
@@ -17,9 +17,15 @@
 
       h2 {
         margin: 10px;
-        font-size: 16px;
+        font-size: 18px;
         text-align: left;
-      },
+      }
+      
+      h3{
+        margin: 10px;
+        font-size: 13px;
+        text-align: center;
+      }
 
       p {
          line-height: 12px;
@@ -47,9 +53,9 @@
       #features {
         top: 0;
         background: #fff;
-        height: 40px;
+        height: 10vh;
         margin-top: 20px;
-        width: 500px;
+        width: auto;
 
       }
 
@@ -61,31 +67,54 @@
         background: rgba(255, 255, 255, 0.8);
         margin-right: 10px;
         margin-bottom: 80px;
-        width: 400px;
+        width: 200px;
         font-size: 13px;
         right: 0;
-        display: flex;
+        display: block;
         justify-content: space-between;
       }
       
+      .legend-title {
+        font-size: 13px;
+        font-weight: bold;
+        margin-bottom: 6px;
+      }
+      
+      .gradient {
+        width: 100%;
+        height: 12px;
+        opacity: 0.8;
+        background: linear-gradient(to right,
+        #fdd963 0%,
+        #fb9a09 10%,
+        #d80303 50%,
+        #6f020e 100%);
+      }
 
-        #legend-rects, #legend-circles {
-          display: flex;
-          flex-direction: column;
-          margin-right: 8px; /* space between columns */
-        }
+      .gradient-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin-top: 3px;
+      }
+
+      #legend-circles {
+        display: flex;
+        flex-direction: column;
+        font-size: 12px;
+      }
+      
       #note{
         padding: 5px;
         line-height: 14px;
         height: auto;
         margin-left: 20px;
         margin-bottom: 25px;
-        width: 700px;
+        width: 300px;
         font-size: 13px;
         left: 0;
         color: #ffff;
-        text-shadow: 1px 1px 3px #000000;
-         
+        text-shadow: 1px 1px 2px #000000; 
  }
       .legend-key {
         display: inline-block;
@@ -93,7 +122,7 @@
         width: 10px;
         height: 10px;
         margin-right: 5px;
-        opacity: 0.7;
+        opacity: 0.8;
         border: 1px solid white;
         
       }
@@ -103,28 +132,46 @@
     }
     
       .mapboxgl-popup-content {
-  font-size: 12px;
-  padding: 8px;
-  width: auto;
-  max-width: none;
- white-space: nowrap;
-}
+      font-size: 12px;
+      padding: 8px;
+      width: auto;
+      max-width: none;
+     white-space: nowrap;
+    }
       
+      @media (max-width: 615px) {
+        #features {
+        height: 14vh;}
+}
     </style>
   </head>
   <body>
     <div id="map"></div>
     <div class="map-overlay" id="features">
-      <h2><center>School districts and public schools from Aspen to Parachute</center></h2>
+      <h2><center>Out-of-district student share by school district, Aspen to Parachute</center></h2>
+      <h3><i>2025-26 school year</i></h3>
     </div>
+<!--
      <div class="map-overlay" id="legend">
     
         <div id="legend-rects"></div>
         <div id="legend-circles"></div>
        </div>
+-->
+    
+          
+      <div class="map-overlay" id="legend">
+        <div class="legend-title">Out-of-district students in the district (%)</div>
+        <div class="gradient"></div>
+      <div class="gradient-labels">
+    <span>1%</span>
+    <span>20%</span>
+      </div>
+
+        <div id="legend-circles"></div>
+      </div>
 
     <div class="map-overlay" id="note"><p>Source: CDE <br>Credit: Laurine Lassalle - Aspen Journalism</p></div>
-    
     
     <script>
       // define access token
@@ -135,46 +182,47 @@
       const map = new mapboxgl.Map({
         container: 'map', // container id
         style: 'mapbox://styles/laurine-aj/cmu306x46002v01sj58zq95mc' ,
-        center: isMobile ? [-107.3, 39.35] : [-107.4, 39.4],
-        zoom: isMobile ? 7 : 8.5
+        center: isMobile ? [-107.3, 39.35] : [-107.4, 39.47],
+        zoom: isMobile ? 7 : 8.2
       });
 
     map.on('load', () => {
   map.getCanvas().style.cursor = 'default';
 
       // Add legend
-      const layers = [
-        { name: 'Garfield 16 school district', color: '#f29e31', shape: 'rect' },
-        { name: 'Garfield RE-2 school district', color: '#1f89e5', shape: 'rect' },
-        { name: 'Roaring Fork RE-1 school district', color: '#e51010', shape: 'rect' },
-        { name: 'Aspen 1 school district', color: '#510566', shape: 'rect' },
-        
-        
-        // Circles
-          { name: 'Garfield 16 schools', color: '#004d40', shape: 'circle' },
-          { name: 'Garfield RE-2 schools', color: '#da1b61', shape: 'circle' },
-          { name: 'Roaring Fork schools', color: '#066ab7', shape: 'circle' },
-          { name: 'Aspen schools', color: '#f3cf30', shape: 'circle' }
-          ];
-  
       
-      const legendRects = document.getElementById('legend-rects');
+      
+//      const layers = [
+//        { name: '1% of the students', color: '#fdd963', shape: 'rect' },
+//        { name: 'Garfield RE-2 school district (2% of the students)', color: '#fb9a09', shape: 'rect' },
+//        { name: 'Roaring Fork RE-1 school district (10% of the students)', color: '#d80303', shape: 'rect' },
+//        { name: 'Aspen 1 school district (20% of the students)', color: '#6f020e', shape: 'rect' },
+//        
+        
+       const layers = [
+  { name: 'Garfield 16 schools', color: '#004d40', shape: 'circle' },
+  { name: 'Garfield RE-2 schools', color: '#da1b61', shape: 'circle' },
+  { name: 'Roaring Fork schools', color: '#066ab7', shape: 'circle' },
+  { name: 'Aspen schools', color: '#f3cf30', shape: 'circle' }
+];
+//      
+//      const legendRects = document.getElementById('legend-rects');
       const legendCircles = document.getElementById('legend-circles');
 
-      layers.forEach(layer => {
-        const item = document.createElement('div');
-        const key = document.createElement('span');
-        key.className = 'legend-key';
-        if (layer.shape === 'circle') key.classList.add('circle');
-        key.style.backgroundColor = layer.color;
+layers.forEach(layer => {
+  const item = document.createElement('div');
+  const key = document.createElement('span');
+  key.className = 'legend-key';
+  if (layer.shape === 'circle') key.classList.add('circle');
+  key.style.backgroundColor = layer.color;
 
-        const value = document.createElement('span');
-        value.innerHTML = `${layer.name}`;
-        item.appendChild(key);
-        item.appendChild(value);
-        (layer.shape === 'circle' ? legendCircles : legendRects).appendChild(item);
-      });
-      
+  const value = document.createElement('span');
+  value.innerHTML = `${layer.name}`;
+  item.appendChild(key);
+  item.appendChild(value);
+
+  legendCircles.appendChild(item);
+});
       const popup = new mapboxgl.Popup({
   closeButton: false,
   closeOnClick: false
